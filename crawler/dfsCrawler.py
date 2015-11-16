@@ -1,6 +1,18 @@
 # encoding=utf8
 # -*- coding: utf-8 -*-
 
+# --------------------------------------------------------------------
+#  a crawler to search company information in their 10K form
+#
+#  first input excel file, use BeautifulSoup to parse and get basic information,
+#  get the 10-K file, and filter, then analyize
+#
+#  input: input.xls
+#  output: output.xls
+#
+#  write by Zhenyu
+#
+# --------------------------------------------------------------------
 
 
 from BeautifulSoup import BeautifulSoup
@@ -57,7 +69,7 @@ def open_url(url_address):
 
 
 def get_cik_list():
-    input_file = xlrd.open_workbook('input.xls')
+    input_file = xlrd.open_workbook('inputdfs.xls')
     sheet = input_file.sheets()[0]
     cik_list = []
     for i in range(sheet.nrows - 1):
@@ -83,8 +95,12 @@ def get_item_list(cik_num, filing_type):
         return -2
     soup2 = BeautifulSoup(ct2)
 
-
     table1 = soup.findAll('tr')
+    flag = ct.find('No matching CIK')#check whether this CIK is empty
+    if flag > 0 or len(table1) < 4:
+        table = []
+        return table1
+    
     del table1[table1.__len__()-1]
     for i in range(3):
         del table1[0]
@@ -94,22 +110,18 @@ def get_item_list(cik_num, filing_type):
         del table2[0]
 
     table=table1+table2
-
-    flag = ct.find('No matching CIK')
-    if flag > 0 or len(table) < 4:
-        table = []
-
-        return table
-
     return table
 
 
-def report_error(cik, filing_type):
-    output_table.write(row_num, 0, cik)
-    output_table.write(row_num, 1, filing_type)
-    output_table.write(row_num, 2, 'No matching CIK')
+def get_item_fileNo(item):
+    ft = item.contents[9].contents[2]
+    return ft
 
+def get_item_date(item):
 
+    filing_date = item.contents[7].contents[0][0:4]+item.contents[7].contents[0][5:7]+item.contents[7].contents[0][8:10]
+    return filing_date
+    
 def get_web_address(item, time_threshold):
     base_address = 'https://www.sec.gov'
     filing_date = item.contents[7].contents[0][0:4]+item.contents[7].contents[0][5:7]+item.contents[7].contents[0][8:10]
@@ -170,191 +182,6 @@ def clean(document, document_type):
     return document
 
 
-def item701801(ft):
-    p1 = ft.find('Item 7.01',0)
-    p2 = ft.find('Item 8.01',0)
-    p3 = ft.find('Item 9.01',0)
-    p4 = ft.find('SIGNATURES',0)
-
-    print p1,p2,p3,p4
-    if (p1!=-1):#find item 7.01
-        if(p2!=-1):
-            start = ft.find('Item 7.01',p1)+len('Item 7.01')
-            stop = p2
-            tmpft = clean(ft[start:stop],0)
-            output_table.write(row_num,4, tmpft)
-            print(7.01)
-
-        elif(p3!=-1):
-            start = ft.find('Item 7.01',p1)+len('Item 7.01')
-            stop = p3
-            tmpft = clean(ft[start:stop],0)
-            output_table.write(row_num,4, tmpft)
-            print(7.01)
-        else:
-            start = ft.find('Item 7.01',p1)+len('Item 7.01')
-            stop = p4
-            tmpft = clean(ft[start:stop],0)
-            output_table.write(row_num,4, tmpft)
-            print(7.01)
-
-
-    if (p2!=-1):#find item 8.01
-        if(p3!=-1):
-            start = ft.find('Item 8.01',p2)+len('Item 8.01')
-            stop = p3
-            tmpft = clean(ft[start:stop],0)
-            output_table.write(row_num,5, tmpft)
-
-        else:
-            start = ft.find('Item 8.01',p2)+len('Item 8.01')
-            stop = p4
-            tmpft = clean(ft[start:stop],0)
-            output_table.write(row_num,5, tmpft)
-
-
-
-
-
-
-
-
-
-
-
-
-def well_season_issue(ft):
-    file_base = ft.find('well-known seasoned issuer')
-    first = ft.find('yes', file_base)
-    second = ft.find('no', first)
-    third = ft.find('x', first)
-    global symbol
-    # if not use x as a symbol use s as a symbol
-    if third < 0 or third > second + 5:
-        third = ft.find('s', first + 3)
-        symbol = 's'
-    if first <= third <= second:
-        output_table.write(row_num, 4, 1)
-    elif third >= second:
-        output_table.write(row_num, 4, 0)
-    else:
-        output_table.write(row_num, 4, 'NaN')
-
-
-def not_require_file(ft):
-    file_base = ft.find('not required to file')
-    first = ft.find('yes', file_base)
-    second = ft.find('no', first)
-    third = ft.find(symbol, first+3)
-    if first <= third <= second:
-        output_table.write(row_num, 5, 1)
-    elif third >= second:
-        output_table.write(row_num, 5, 0)
-    else:
-        output_table.write(row_num, 5, 'NaN')
-
-
-def registrant_type(ft):
-    if ft.find('shell company') > ft.find('12b-2'):
-        file_base = ft.find('12b-2')
-    else:
-        file_base = ft.rfind('large accelerated', 0, ft.find('shell company'))
-
-    laf = ft.find('large accelerated filer', file_base)
-    laf_x = ft.find(symbol, laf+22)
-    # laf_s = ft.find('filter s', laf)
-    af = ft.find('accelerated filer', laf + 10)
-    af_x = ft.find(symbol, af+16)
-    # af_s = ft.find('filter s', af)
-    naf = ft.find('non-accelerated filer', af)
-    naf_x = ft.find(symbol, naf+19)
-    # naf_s = ft.find('filter s', naf)
-    sr = ft.find('smaller reporting company', file_base)
-    sr_x = ft.find(symbol, sr+24)
-    # sr_s = ft.find('company s', sr)
-    file_end = ft.find('shell company', file_base)
-    filter_flag = 0
-    if file_base <= laf <= file_end:
-        if file_base <= af <= file_end:
-            if laf <= laf_x <= af:
-                output_table.write(row_num, 6, 1)
-                output_table.write(row_num, 7, 0)
-                output_table.write(row_num, 8, 0)
-                output_table.write(row_num, 9, 0)
-                filter_flag = 1
-    if file_base <= af <= file_end:
-        if file_base <= naf <= file_end:
-            if af <= af_x <= naf:
-                output_table.write(row_num, 6, 0)
-                output_table.write(row_num, 7, 1)
-                output_table.write(row_num, 8, 0)
-                output_table.write(row_num, 9, 0)
-                filter_flag = 1
-    if file_base <= naf <= file_end:
-        if file_base <= sr <= file_end:
-            if naf <= naf_x <= sr:
-                output_table.write(row_num, 6, 0)
-                output_table.write(row_num, 7, 0)
-                output_table.write(row_num, 8, 1)
-                output_table.write(row_num, 9, 0)
-                filter_flag = 1
-    if file_base <= sr <= file_end:
-        if sr <= sr_x <= file_end:
-            output_table.write(row_num, 6, 0)
-            output_table.write(row_num, 7, 0)
-            output_table.write(row_num, 8, 0)
-            output_table.write(row_num, 9, 1)
-            filter_flag = 1
-    if sr < file_base or sr > file_end:
-        if file_base <= naf <= file_end:
-            if naf <= naf_x <= file_end:
-                output_table.write(row_num, 6, 0)
-                output_table.write(row_num, 7, 0)
-                output_table.write(row_num, 8, 1)
-                output_table.write(row_num, 9, 0)
-                filter_flag = 1
-    if filter_flag == 0:
-        output_table.write(row_num, 6, 'NaN')
-        output_table.write(row_num, 7, 'NaN')
-        output_table.write(row_num, 8, 'NaN')
-        output_table.write(row_num, 9, 'NaN')
-
-    file_base = ft.find('shell company')
-    first = ft.find('yes', file_base)
-    second = ft.find('no', first)
-    third = ft.find(symbol, first + 3)
-    if (first <= third <= second) == first:
-        output_table.write(row_num, 10, 1)
-    elif third >= second:
-        output_table.write(row_num, 10, 0)
-    else:
-        output_table.write(row_num, 10, 'NaN')
-
-
-def incorporated_by_reference(ft):
-    file_base = ft.find('documents incorporated by reference')
-    if file_base == -1:
-        output_table.write(row_num, 11, 'can not find documents incorporated by reference')
-        return
-
-    first = ft.find('proxy statement', file_base)
-    second = ft.find('definitive proxy statement', file_base)
-    third = ft.find('def 14a', file_base)
-
-    if (first > 0 and first - file_base < 500) or \
-            (second > 0 and second - file_base < 500) or (third > 0 and third - file_base < 500):
-        output_table.write(row_num, 11, 'Yes')
-        return
-
-    second = ft.find('none', file_base)
-    if 0 < second < file_base + 500:
-        output_table.write(row_num, 11, 'No')
-        return
-
-    output_table.write(row_num, 11, 'Both yes and no can not be found.')
-    return
-
-
 
 
 
@@ -362,7 +189,6 @@ def main(filing_type, time_threshold):
     # for each cik get the web list
     print "start "+filing_type+"collection"
     cik_list = get_cik_list()
-    output_file = open("C:\Users\Administrator\Desktop\company_search-master\out.txt",'w')
     global output_table
     global symbol
 
@@ -380,14 +206,13 @@ def main(filing_type, time_threshold):
 
         # check if no filings
         if len(item_list) == 0:
-            report_error(cik, filing_type)
             print 'error'
             row_num += 1
             continue
 
         for item in item_list:
             
-            symbol = 'x'
+            #symbol = 'x'
 
             if item.contents[1].contents[0]!='8-K':
                 continue
@@ -399,6 +224,7 @@ def main(filing_type, time_threshold):
             document_web = get_general(form_web, cik, filing_type)
             if document_web == -1 or document_web == -2:
                 continue
+                
             # get the general information and return if the document is html(0) or txt(1) or other(2)
             if '.htm' in document_web:
                 file_type = 0
@@ -416,9 +242,12 @@ def main(filing_type, time_threshold):
             if ft == -2:
                 continue
             document = clean(ft, file_type)
-            print document
+            filing_date = get_item_date(item)
+            fileNo = get_item_fileNo(item)
+            str = "C:\Users\Administrator\Desktop\company_search-master\in\8-k_date" + filing_date + "_fileNO" +fileNo+ ".txt"
+            output_file = open(str,'w')
             output_file.write(document)
-            output_file.write('\n')
+            output_file.close();
             row_num += 1
 
     cik_count += 1
