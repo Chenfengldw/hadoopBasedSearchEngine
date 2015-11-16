@@ -200,6 +200,7 @@ def main(filing_type, time_threshold):
     cik_count = 0
     cik_total = len(cik_list)
     for cik in cik_list:
+        print cik
         item_list = get_item_list(cik, filing_type)
         if item_list == -2:
             continue
@@ -244,7 +245,7 @@ def main(filing_type, time_threshold):
             document = clean(ft, file_type)
             filing_date = get_item_date(item)
             fileNo = get_item_fileNo(item)
-            str = "C:\Users\Administrator\Desktop\company_search-master\in\8-k_date" + filing_date + "_fileNO" +fileNo+ ".txt"
+            str = "C:\Users\sunny2\Desktop\hadoopBasedSearchEngine\crawler\in\8-k_date" + filing_date + "_fileNo " +fileNo+".txt"
             output_file = open(str,'w')
             output_file.write(document)
             output_file.close();
@@ -252,7 +253,6 @@ def main(filing_type, time_threshold):
 
     cik_count += 1
     print "%d of %d" % (cik_count, cik_total)
-    output_file.close();
 
 main('8-K', '20000101')
 #main('10-KSB', '20000101')
