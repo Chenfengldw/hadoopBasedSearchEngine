@@ -13,4 +13,3 @@ All original pages get by crawler are saved in HDFS, after MapReduce the index w
 
 ## Online Demo
 
-**Still under working!**    visit [here](http://exciting.delvin.xyz)
