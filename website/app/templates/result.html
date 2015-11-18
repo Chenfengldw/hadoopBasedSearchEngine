@@ -2,26 +2,25 @@
 {% block content %}
 	<br/>
 	<div class="container-fluid">
-	<div class="row">
-	<div class="col-xs-1"></div>
-	<div class="col-xs-8">
-	<form action="/search" method="get">
-		<div class="input-group">
-		<input type="search" name ="q" class="form-control" id="search-box">
-	    <span class="input-group-btn"><input class="btn btn-primary" id="classifyurl" type="submit" value="Search"></span> 
-	    </div>         <!-- /input-group -->
+
+	<form action="/search" method="get" class="form-inline">
+	<div class="input-group">
+		<input type="search" name ="q" class="form-control">
+		<span class="input-group-addon btn-primary" onclick="$('button[id=hidden-button]').click();">Search</span>
+		<button type="submit" class="btn btn-primary hidden" id="hidden-button">Search</button>
+	</div>
 	</form>
-	</div>
-	</div>
+
 	</div><!-- /.container -->
 
 
-    <br/>
+    <hr>
     <div class="container-fluid">
         	<div>
         	{% if result|length != 0  %}
         		{% for row in result %}
         			<li>{{ row }}</li>
+        			<hr>
         		{% endfor %}
 			{% else %}
 				<h1>No result</h1>
