@@ -24,14 +24,7 @@ import xlwt
 import sys
 import time
 
-'''output_list = ['CIK', 'Filings', 'Period_of_Report', 'Filing_Date', 'Well_Known_Seasoned_Issuer',
-               'Not_Required_to_File', 'Large_Accelerated_Filer', 'Accelerated_Filer', 'Non_Accelerated_Filer',
-               'Smaller_Reporting_Company', 'Shell_Company', 'Proxy_Incorporated_by_Reference', 'Used_COSO',
-               'Version_of_COSO']'''
 
-output_list =['CIK', 'Filings', 'Period_of_Report', 'Filing_Date','Item7.0.1','Item8.0.1']
-
-symbol = 'x'
 
 
 
@@ -187,6 +180,8 @@ def clean(document, document_type):
 
 def main(filing_type, time_threshold):
     # for each cik get the web list
+    output_table = xlwt.Workbook()
+    output_sheet = output_table.add_sheet('Sheet1', cell_overwrite_ok=True)
     print "start "+filing_type+"collection"
     cik_list = get_cik_list()
     global output_table
@@ -196,7 +191,7 @@ def main(filing_type, time_threshold):
     global row_num
     global recursive_count
     recursive_count = 0
-    row_num = 1
+    row_num = 0
     cik_count = 0
     cik_total = len(cik_list)
     for cik in cik_list:
@@ -212,8 +207,6 @@ def main(filing_type, time_threshold):
             continue
 
         for item in item_list:
-            
-            #symbol = 'x'
 
             if item.contents[1].contents[0]!='8-K':
                 continue
@@ -245,14 +238,19 @@ def main(filing_type, time_threshold):
             document = clean(ft, file_type)
             filing_date = get_item_date(item)
             fileNo = get_item_fileNo(item)
-            str = "C:\Users\sunny2\Desktop\hadoopBasedSearchEngine\crawler\in\8-k_date" + filing_date + "_fileNo " +fileNo+".txt"
+            str = "D:\Documents\GitHub\hadoopBasedSearchEngine\crawler\in\8-k_date" + filing_date + "_fileNo " +fileNo+".txt"
             output_file = open(str,'w')
             output_file.write(document)
             output_file.close();
+            output_sheet.write(row_num,0,str)
+            output_sheet.write(row_num,1,filing_date)
+            output_sheet.write(row_num,2,fileNo)
+            output_sheet.write(row_num,3,document_web)
             row_num += 1
+        cik_count += 1
 
-    cik_count += 1
     print "%d of %d" % (cik_count, cik_total)
+    output_table.save("info.xls")
 
 main('8-K', '20000101')
 #main('10-KSB', '20000101')
