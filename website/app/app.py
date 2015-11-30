@@ -4,7 +4,7 @@ from flask import render_template,jsonify,request
 import re
 import xlrd
 app = Flask(__name__)
-app.debug = True
+#app.debug = True
 file_url_base = "./static/resources/documents/"
 origin_url_base ="https://bbs.sjtu.edu.cn/bbstcon,board,LoveBridge,reid,######.html"
 
@@ -83,14 +83,17 @@ def search(result = None):
 		summary_start_pos = content.find(keywords[0].encode('utf-8'))
 		summary_end_pos = content.find("※来源")
 		summary = content[summary_start_pos:summary_end_pos-2]
+		presummary = content[0:summary_start_pos]
 		#print summary
 		#print title
-		username = sheet.cell(id,2).value.split('=')[1]
-		publish_time = sheet.cell(id,3).value
-
-		print username
-		print publish_time
-
+		if id <= 1400:	
+			username = sheet.cell(id,2).value.split('=')[1]
+			publish_time = sheet.cell(id,3).value
+		else:
+			username = "Mrs.Smith"
+			publish_time = "Unknown"
+		#print username
+		#print publish_time
 		keywordLen = len(keywords[0])
 		result_content = []
 		result_content.append(title.decode("utf-8"))
@@ -99,6 +102,7 @@ def search(result = None):
 		result_content.append(keywordLen)
 		result_content.append(username)
 		result_content.append(publish_time)
+		result_content.append(presummary.decode("utf-8"))
 		show_results.append(result_content)
 		document_file.close()
 
@@ -108,4 +112,4 @@ def search(result = None):
 	else:
 		return render_template('result.html')
 if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0')
+    app.run(host='0.0.0.0')

@@ -36,9 +36,9 @@
 	        	{% if result|length != 0  %}
 	        		{% for row in result %}
 	        			<p><a href="{{ row[1] }} " target="__blank"><strong>{{ row[0] }}</strong></a></p>
-	        			<p>... <strong>{{ row[2][0:row[3]] }}</strong>{{ row[2][row[3]:52] }} ...</p>
-	        			<p>
-	        				<small>作者: {{ row[4] }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;发布日期 {{ row[5] }}</small>
+	        			<p>... {{ row[6][-10:] }}<strong>{{ row[2][0:row[3]] }}</strong>{{ row[2][row[3]:50] }} ...</p>
+	        			<p class="url-color">
+	        				<small>作者: {{ row[4] }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;发布日期: {{ row[5] }}</small>
 	        			</p>	
 	        			<p class="url-color hidden-xs">
 	        				<small>{{ row[1] }}</small>
@@ -46,7 +46,9 @@
 	        			<hr>
 	        		{% endfor %}
 				{% else %}
-					<h1>Ops, no result</h1>
+					<p>∑(っ °Д °;)っ</p>
+					<p>您查找的内容还未收录!  </p>
+					<p>试试搜索别的吧，“计算机”怎么样?</p>
 				{% endif %}
 			</div>
       		</div>
