@@ -9,7 +9,6 @@ The search engine is mainly based on three parts (*expected*):
 - **Inverted Index** based on Hadoop MapReduce
 - **Search Engine Frontend** based on flask-bootstrap
 
-All original pages get by crawler are saved in HDFS, after MapReduce the index will be saved in mangodb.
-
 ## Online Demo
 
+see [exciting.delvin.xyz](http://exciting.delvin.xyz)
