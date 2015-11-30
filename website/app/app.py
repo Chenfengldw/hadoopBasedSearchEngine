@@ -2,8 +2,9 @@
 from flask import Flask
 from flask import render_template,jsonify,request
 import re
+import xlrd
 app = Flask(__name__)
-
+app.debug = True
 file_url_base = "./static/resources/documents/"
 origin_url_base ="https://bbs.sjtu.edu.cn/bbstcon,board,LoveBridge,reid,######.html"
 
@@ -15,6 +16,10 @@ def hello_world(name = None):
 @app.route('/about')
 def about():
 	return render_template('about.html')
+
+@app.route('/contact')
+def contact():
+	return render_template('contact.html')
 
 @app.route('/')
 def index():
@@ -32,11 +37,12 @@ def search(result = None):
 		return render_template('result.html')
 	#use regular expression to split the query
 	keywords = re.split('; |, |\*| |\n',query)
-	print keywords
+	#print keywords
 	#dic = {}
 	#dic['test'] = keywords
 	#return jsonify(dic)
-
+	book = xlrd.open_workbook('./static/resources/info.xls')
+	sheet = book.sheet_by_index(0)
 	file = open('./static/resources/index.txt','r')
 	while True:
 		line = file.readline().decode('utf-8')
@@ -48,7 +54,7 @@ def search(result = None):
 			urls_str = line[start_pos+1:-1]
 			urls = re.split(';',urls_str)
 			for url_org in urls:
-				if url_org!="":
+				if url_org!="" and url_org!="\r":
 					url = re.split(':',url_org)
 					url[1] = int(url[1])
 					results.append(url)
@@ -64,6 +70,8 @@ def search(result = None):
 		document_file = open(file_url_base+result[0])
 		content = document_file.read()
 		#print content
+		id = int(result[0][0:-4])
+		#print id
 		title_start_pos = content.find("2312")
 		title_end_pos = content.find("饮水思源")
 		title = content[title_start_pos+9:title_end_pos]
@@ -77,12 +85,20 @@ def search(result = None):
 		summary = content[summary_start_pos:summary_end_pos-2]
 		#print summary
 		#print title
+		username = sheet.cell(id,2).value.split('=')[1]
+		publish_time = sheet.cell(id,3).value
+
+		print username
+		print publish_time
+
 		keywordLen = len(keywords[0])
 		result_content = []
 		result_content.append(title.decode("utf-8"))
 		result_content.append(url)
 		result_content.append(summary.decode("utf-8"))
 		result_content.append(keywordLen)
+		result_content.append(username)
+		result_content.append(publish_time)
 		show_results.append(result_content)
 		document_file.close()
 
@@ -92,4 +108,4 @@ def search(result = None):
 	else:
 		return render_template('result.html')
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,host='0.0.0.0')
