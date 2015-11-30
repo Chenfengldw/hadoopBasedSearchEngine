@@ -19,11 +19,13 @@
         	<div>
         	{% if result|length != 0  %}
         		{% for row in result %}
-        			<li>{{ row }}</li>
+        			<p><a href="{{ row[1] }} "><strong>{{ row[0] }}</strong></a></p>
+        			<p>... <strong>{{ row[2][0:row[3]] }}</strong>{{ row[2][row[3]:52] }} ...</p>
+        			<p><small>来源 : {{ row[1] }}</small></p>	
         			<hr>
         		{% endfor %}
 			{% else %}
-				<h1>No result</h1>
+				<h1>Ops, no result</h1>
 			{% endif %}
       		</div>
     </div><!-- /.container -->
